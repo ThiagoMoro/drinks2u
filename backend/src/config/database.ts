@@ -4,14 +4,14 @@ import path from 'path';
 const dbPath = path.join(__dirname, '../../drinks2u.db');
 const db = new Database(dbPath);
 
-// Criar tabela se não existir
+// Create table if it doesn't exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    registro TEXT NOT NULL,
-    bebida TEXT NOT NULL,
-    quantidade INTEGER NOT NULL,
-    status TEXT DEFAULT 'Pendente',
+    registration TEXT NOT NULL,
+    beverage TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    status TEXT DEFAULT 'Pending',
     timestamp TEXT NOT NULL
   )
 `);

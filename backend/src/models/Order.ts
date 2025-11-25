@@ -1,14 +1,14 @@
 export interface Order {
   id: number;
-  registro: string;
-  bebida: string;
-  quantidade: number;
-  status: 'Pendente' | 'Pronto';
+  registration: string;
+  beverage: string;
+  quantity: number;
+  status: 'Pending' | 'Ready';
   timestamp: string;
 }
 
 export interface CreateOrderDTO {
-  registro: string;
-  bebida: string;
-  quantidade: number;
+  registration: string;
+  beverage: string;
+  quantity: number;
 }
