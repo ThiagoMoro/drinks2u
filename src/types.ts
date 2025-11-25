@@ -10,5 +10,5 @@ export interface Order {
 export interface ClientFormData {
   registro: string;
   bebida: string;
-  quantidade: number;
+  quantidade: number | null;
 }

@@ -2,22 +2,20 @@ import { useState } from 'react';
 import type { ClientFormData } from '../types';
 import { addOrder } from '../utils/storage';
 
-const BEBIDAS = [
-  'Água',
-  'Refrigerante',
-  'Suco de Laranja',
-  'Suco de Uva',
-  'Cerveja',
-  'Café',
-  'Chá',
-  'Energético',
+const BEVERAGES = [
+  'Water',
+  'Beer',
+  'Gin',
+  'Pink Gin',
+  'Smirnoff Cola',
+  'Capitan Morgan',
 ];
 
 export default function ClientArea() {
   const [formData, setFormData] = useState<ClientFormData>({
     registro: '',
     bebida: '',
-    quantidade: 1,
+    quantidade: null,
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -25,15 +23,53 @@ export default function ClientArea() {
     e.preventDefault();
 
     if (!formData.registro.trim() || !formData.bebida) {
-      setMessage({ type: 'error', text: 'Por favor, preencha todos os campos obrigatórios.' });
+      setMessage({ type: 'error', text: 'Please fill in all required fields.' });
       return;
     }
 
-    addOrder(formData);
-    setMessage({ type: 'success', text: '✓ Pedido enviado com sucesso!' });
-    setFormData({ registro: '', bebida: '', quantidade: 1 });
+    // Garante que quantidade é número positivo
+    if (formData.quantidade === null || formData.quantidade <= 0) {
+      setMessage({ type: 'error', text: 'Please enter a valid quantity.' });
+      return;
+    }
+
+    // Aqui criamos um objeto com quantidade já garantida como number
+    const payload = {
+      registro: formData.registro,
+      bebida: formData.bebida,
+      quantidade: formData.quantidade,
+    };
+
+    addOrder(payload); // agora o tipo bate com Omit<Order, 'id' | 'timestamp' | 'status'>
+
+    setMessage({ type: 'success', text: '✓ Order submitted successfully!' });
+    setFormData({ registro: '', bebida: '', quantidade: null });
 
     setTimeout(() => setMessage(null), 3000);
+  };
+
+  const handleRegistroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Apenas números, máximo 3 dígitos
+    if (/^\d{0,3}$/.test(value)) {
+      setFormData({ ...formData, registro: value });
+    }
+  };
+
+  const handleQuantidadeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Apenas números, máximo 3 dígitos
+    if (/^\d{0,3}$/.test(value)) {
+      if (value === '') {
+        setFormData({ ...formData, quantidade: null });
+        return;
+      }
+      const num = parseInt(value, 10);
+      if (!Number.isNaN(num) && num <= 999) {
+        setFormData({ ...formData, quantidade: num });
+      }
+    }
   };
 
   return (
@@ -44,8 +80,8 @@ export default function ClientArea() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold text-gray-800">Solicitar Bebida</h2>
-        <p className="text-gray-500 mt-2">Preencha o formulário abaixo</p>
+        <h2 className="text-3xl font-bold text-gray-800">Request Beverage</h2>
+        <p className="text-gray-500 mt-2">Please fill in the form below</p>
       </div>
 
       {message && (
@@ -63,21 +99,23 @@ export default function ClientArea() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Número de Registro <span className="text-red-500">*</span>
+            Lanyard Staff <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.registro}
-            onChange={(e) => setFormData({ ...formData, registro: e.target.value })}
+            onChange={handleRegistroChange}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-            placeholder="Ex: 12345"
+            placeholder="e.g. 123"
+            maxLength={3}
             required
           />
+          <p className="text-xs text-gray-500 mt-1">Maximum 3 digits</p>
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Bebida <span className="text-red-500">*</span>
+            Beverage <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.bebida}
@@ -85,10 +123,10 @@ export default function ClientArea() {
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
             required
           >
-            <option value="">Selecione uma bebida</option>
-            {BEBIDAS.map((bebida) => (
-              <option key={bebida} value={bebida}>
-                {bebida}
+            <option value="">Select a beverage</option>
+            {BEVERAGES.map((beverage) => (
+              <option key={beverage} value={beverage}>
+                {beverage}
               </option>
             ))}
           </select>
@@ -96,23 +134,26 @@ export default function ClientArea() {
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Quantidade
+            Quantity (UNI)
           </label>
           <input
-            type="number"
-            min="1"
-            max="10"
-            value={formData.quantidade}
-            onChange={(e) => setFormData({ ...formData, quantidade: parseInt(e.target.value) })}
+            type="text"
+            inputMode="numeric"
+            value={formData.quantidade ?? ''}
+            onChange={handleQuantidadeChange}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+            placeholder="e.g. 1"
+            maxLength={3}
+            required
           />
+          <p className="text-xs text-gray-500 mt-1">Maximum 3 digits</p>
         </div>
 
         <button
           type="submit"
           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] transition duration-200 shadow-lg"
         >
-          Enviar Pedido
+          Submit Order
         </button>
       </form>
     </div>

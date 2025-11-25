@@ -90,10 +90,10 @@ export default function AdminArea() {
                   ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Registro
+                  Staff
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Bebida
+                  Drink
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Qtd
@@ -105,7 +105,7 @@ export default function AdminArea() {
                   Status
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Ações
+                  Action
                 </th>
               </tr>
             </thead>
