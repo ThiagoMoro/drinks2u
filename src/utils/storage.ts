@@ -16,7 +16,7 @@ export const addOrder = (order: Omit<Order, 'id' | 'timestamp' | 'status'>): Ord
   const newOrder: Order = {
     ...order,
     id: Date.now(),
-    status: 'Pendente',
+    status: 'Pending',
     timestamp: new Date().toLocaleString('pt-BR'),
   };
   orders.push(newOrder);

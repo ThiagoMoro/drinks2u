@@ -3,7 +3,7 @@ export interface Order {
   registro: string;
   bebida: string;
   quantidade: number;
-  status: 'Pendente' | 'Em Preparo' | 'Pronto' | 'Entregue';
+  status: 'Pending' | 'Ready';
   timestamp: string;
 }
 

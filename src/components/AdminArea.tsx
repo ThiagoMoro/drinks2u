@@ -5,10 +5,9 @@ import { getOrders, updateOrderStatus, deleteOrder } from '../utils/storage';
 export default function AdminArea() {
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // Carrega pedidos na montagem, mas envolve o setState em setTimeout
+  // Carrega pedidos na montagem
   useEffect(() => {
     const storedOrders = getOrders();
-    // Delega o setState para o próximo tick, evitando o warning de efeito síncrono
     const id = setTimeout(() => {
       setOrders(storedOrders);
     }, 0);
@@ -20,26 +19,22 @@ export default function AdminArea() {
     setOrders(getOrders());
   };
 
-  const handleStatusChange = (id: number, status: Order['status']) => {
-    updateOrderStatus(id, status);
+  const handleMarkAsReady = (orderId: number) => {
+    updateOrderStatus(orderId, 'Ready');
     reloadOrders();
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Tem certeza que deseja excluir este pedido?')) {
-      deleteOrder(id);
+  const handleDelete = (orderId: number) => {
+    if (confirm('Are you sure you want to delete this order?')) {
+      deleteOrder(orderId);
       reloadOrders();
     }
   };
 
   const getStatusColor = (status: Order['status']) => {
-    const colors: Record<Order['status'], string> = {
-      Pendente: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'Em Preparo': 'bg-blue-100 text-blue-800 border-blue-200',
-      Pronto: 'bg-green-100 text-green-800 border-green-200',
-      Entregue: 'bg-gray-100 text-gray-800 border-gray-200',
-    };
-    return colors[status];
+    return status === 'Pending'
+      ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      : 'bg-green-100 text-green-800 border-green-200';
   };
 
   return (
@@ -55,10 +50,10 @@ export default function AdminArea() {
             />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold text-gray-800">Painel Administrativo</h2>
+        <h2 className="text-3xl font-bold text-gray-800">Stock control</h2>
         <div className="mt-4 inline-block bg-gradient-to-r from-green-50 to-blue-50 px-6 py-3 rounded-full border border-green-200">
           <span className="text-gray-700 font-medium">
-            Total de pedidos:{' '}
+            Total orders:{' '}
             <span className="text-green-600 font-bold text-xl">{orders.length}</span>
           </span>
         </div>
@@ -79,7 +74,7 @@ export default function AdminArea() {
               d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
             />
           </svg>
-          <p className="text-gray-500 text-lg">Nenhum pedido encontrado.</p>
+          <p className="text-gray-500 text-lg">No orders found.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -90,22 +85,22 @@ export default function AdminArea() {
                   ID
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Staff
+                  Lanyard Staff
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Drink
+                  Beverage
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Qtd
+                  Qty
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Data/Hora
+                  Date/Time
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Action
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -138,23 +133,19 @@ export default function AdminArea() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center justify-center gap-2">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(order.id, e.target.value as Order['status'])
-                        }
-                        className="text-xs px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
-                      >
-                        <option value="Pendente">Pendente</option>
-                        <option value="Em Preparo">Em Preparo</option>
-                        <option value="Pronto">Pronto</option>
-                        <option value="Entregue">Entregue</option>
-                      </select>
+                      {order.status === 'Pending' && (
+                        <button
+                          onClick={() => handleMarkAsReady(order.id)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-semibold transition duration-200 transform hover:scale-105"
+                        >
+                          Ready
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(order.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition duration-200 transform hover:scale-105"
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-semibold transition duration-200 transform hover:scale-105"
                       >
-                        Excluir
+                        Delete
                       </button>
                     </div>
                   </td>
