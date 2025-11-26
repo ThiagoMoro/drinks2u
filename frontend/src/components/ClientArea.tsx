@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ClientFormData } from '../types';
-import { addOrder } from '../utils/storage';
+import { createOrder } from '../utils/api';
 
 const BEVERAGES = [
   'Water',
@@ -8,66 +8,71 @@ const BEVERAGES = [
   'Gin',
   'Pink Gin',
   'Smirnoff Cola',
-  'Capitan Morgan',
+  'Captain Morgan',
 ];
 
 export default function ClientArea() {
   const [formData, setFormData] = useState<ClientFormData>({
-    registro: '',
-    bebida: '',
-    quantidade: null,
+    registration: '',
+    beverage: '',
+    quantity: null,
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.registro.trim() || !formData.bebida) {
+    if (!formData.registration.trim() || !formData.beverage) {
       setMessage({ type: 'error', text: 'Please fill in all required fields.' });
       return;
     }
 
-    // Garante que quantidade é número positivo
-    if (formData.quantidade === null || formData.quantidade <= 0) {
+    if (formData.quantity === null || formData.quantity <= 0) {
       setMessage({ type: 'error', text: 'Please enter a valid quantity.' });
       return;
     }
 
-    // Aqui criamos um objeto com quantidade já garantida como number
-    const payload = {
-      registro: formData.registro,
-      bebida: formData.bebida,
-      quantidade: formData.quantidade,
-    };
+    try {
+      setSubmitting(true);
+      setMessage(null);
 
-    addOrder(payload); // agora o tipo bate com Omit<Order, 'id' | 'timestamp' | 'status'>
+      await createOrder({
+        registration: formData.registration,
+        beverage: formData.beverage,
+        quantity: formData.quantity,
+      });
 
-    setMessage({ type: 'success', text: '✓ Order submitted successfully!' });
-    setFormData({ registro: '', bebida: '', quantidade: null });
+      setMessage({ type: 'success', text: '✓ Order submitted successfully!' });
+      setFormData({ registration: '', beverage: '', quantity: null });
 
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleRegistroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Apenas números, máximo 3 dígitos
-    if (/^\d{0,3}$/.test(value)) {
-      setFormData({ ...formData, registro: value });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit order.';
+      setMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleQuantidadeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRegistrationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d{0,3}$/.test(value)) {
+      setFormData({ ...formData, registration: value });
+    }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
-    // Apenas números, máximo 3 dígitos
     if (/^\d{0,3}$/.test(value)) {
       if (value === '') {
-        setFormData({ ...formData, quantidade: null });
+        setFormData({ ...formData, quantity: null });
         return;
       }
       const num = parseInt(value, 10);
       if (!Number.isNaN(num) && num <= 999) {
-        setFormData({ ...formData, quantidade: num });
+        setFormData({ ...formData, quantity: num });
       }
     }
   };
@@ -103,8 +108,8 @@ export default function ClientArea() {
           </label>
           <input
             type="text"
-            value={formData.registro}
-            onChange={handleRegistroChange}
+            value={formData.registration}
+            onChange={handleRegistrationChange}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
             placeholder="e.g. 123"
             maxLength={3}
@@ -118,8 +123,8 @@ export default function ClientArea() {
             Beverage <span className="text-red-500">*</span>
           </label>
           <select
-            value={formData.bebida}
-            onChange={(e) => setFormData({ ...formData, bebida: e.target.value })}
+            value={formData.beverage}
+            onChange={(e) => setFormData({ ...formData, beverage: e.target.value })}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
             required
           >
@@ -139,8 +144,8 @@ export default function ClientArea() {
           <input
             type="text"
             inputMode="numeric"
-            value={formData.quantidade ?? ''}
-            onChange={handleQuantidadeChange}
+            value={formData.quantity ?? ''}
+            onChange={handleQuantityChange}
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
             placeholder="e.g. 1"
             maxLength={3}
@@ -151,9 +156,10 @@ export default function ClientArea() {
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] transition duration-200 shadow-lg"
+          disabled={submitting}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 disabled:cursor-not-allowed transform hover:scale-[1.02] transition duration-200 shadow-lg"
         >
-          Submit Order
+          {submitting ? 'Submitting...' : 'Submit Order'}
         </button>
       </form>
     </div>
